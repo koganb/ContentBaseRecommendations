@@ -3,6 +3,8 @@ import pandas as pd
 import toolz
 import numpy as np
 from sklearn import linear_model
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+
 
 categories_path = "data/restaurants/restaurants_categories.csv"
 items_path = "data/restaurants/items.txt"
@@ -110,8 +112,8 @@ def train_linear_model(rating_train_data_with_categories):
     return (user_profile_model_dict, user_profile_avg_dict)
 
 
-def calculate_rmse(rating_test_data, user_profile_model_dict, user_profile_avg_dict, categories_frame):
-    rmse = list()
+def predict(rating_test_data, user_profile_model_dict, user_profile_avg_dict, categories_frame):
+    predition  = list()
     for index, row in rating_test_data.iterrows():
 
         if row['userid'] in user_profile_model_dict:
@@ -123,9 +125,9 @@ def calculate_rmse(rating_test_data, user_profile_model_dict, user_profile_avg_d
                 #             print (row['itemid'])
                 res = user_profile_avg_dict[row['userid']]
 
-            rmse.append(math.pow(row['rating'] - res, 2))
+            predition.append(res)
 
-    return math.sqrt(sum(rmse) / float(len(rmse)))
+    return predition
 
 
 def main():
@@ -158,9 +160,18 @@ def main():
     (user_profile_model_dict, user_profile_avg_dict) = train_linear_model(rating_train_data_with_categories)
 
     #calculate RSME
-    rmse = calculate_rmse(rating_test_data, user_profile_model_dict, user_profile_avg_dict, categories_frame)
+    prediction = predict(rating_test_data, user_profile_model_dict, user_profile_avg_dict, categories_frame)
 
-    print("RSME for restaurant recommendation is ",rmse)
+    print("RSME for restaurant recommendation is ",
+           mean_squared_error(rating_test_data[['rating']], prediction))
+
+    print("RME for restaurant recommendation is ",
+          mean_absolute_error(rating_test_data[['rating']], prediction))
+
+    print("R squared for restaurant recommendation is ",
+          r2_score(rating_test_data[['rating']], prediction))
+
+
 
 
 if __name__ == "__main__":
